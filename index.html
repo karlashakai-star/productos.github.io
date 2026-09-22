@@ -1,0 +1,901 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retail Analytics | Matriz BCG</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+header {
+    background: #0f172a;
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+header h1 {
+    margin-bottom: 10px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: auto;
+    padding: 25px;
+}
+
+.panel {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #00000010;
+}
+
+h2 {
+    margin-bottom: 15px;
+    color: #0f172a;
+}
+
+input, select, button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+}
+
+button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+button.secondary {
+    background: #64748b;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.card {
+    background: #eff6ff;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.card h3 {
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 25px;
+    font-weight: bold;
+    color: #1d4ed8;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+}
+
+th {
+    background: #e2e8f0;
+}
+
+.chart-box {
+    position: relative;
+    height: 350px;
+}
+
+.bcg-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    background: #cbd5e1;
+    padding: 3px;
+    min-height: 500px;
+}
+
+.bcg-quadrant {
+    padding: 25px;
+    min-height: 240px;
+}
+
+.bcg-quadrant h3 {
+    margin-bottom: 10px;
+}
+
+.stars {
+    background: #dbeafe;
+}
+
+.question {
+    background: #fef3c7;
+}
+
+.cows {
+    background: #dcfce7;
+}
+
+.dogs {
+    background: #fee2e2;
+}
+
+.product-tag {
+    display: inline-block;
+    background: white;
+    padding: 7px 10px;
+    border-radius: 20px;
+    margin: 4px;
+    font-size: 13px;
+}
+
+.notice {
+    padding: 12px;
+    background: #fff7ed;
+    border-left: 4px solid #f97316;
+    margin-top: 15px;
+}
+
+@media(max-width: 700px) {
+    .bcg-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        padding: 12px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>📊 Retail Analytics</h1>
+    <p>Análisis estadístico y Matriz BCG</p>
+</header>
+
+<div class="container">
+
+    <div class="panel">
+        <h2>1. Cargar datos de Retail</h2>
+
+        <p>
+            Sube un archivo CSV con las columnas:
+            Producto, Ventas, Crecimiento y Participacion.
+        </p>
+
+        <input type="file" id="csvFile" accept=".csv">
+
+        <button onclick="cargarEjemplo()">
+            Usar datos de ejemplo
+        </button>
+
+        <button class="secondary" onclick="limpiarDatos()">
+            Limpiar
+        </button>
+
+        <div class="notice">
+            Las ventas deben ser numéricas. El crecimiento se expresa en porcentaje.
+            La participación relativa debe ser un valor numérico, por ejemplo 1.5.
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>2. Parámetros de análisis</h2>
+
+        <label>
+            Umbral de crecimiento (%):
+        </label>
+
+        <input type="number" id="umbralCrecimiento" value="10" step="0.1">
+
+        <label>
+            Umbral de participación relativa:
+        </label>
+
+        <input type="number" id="umbralParticipacion" value="1" step="0.1">
+
+        <button onclick="actualizarAnalisis()">
+            Actualizar análisis
+        </button>
+    </div>
+
+    <div class="panel">
+        <h2>3. Indicadores estadísticos</h2>
+
+        <div class="cards">
+
+            <div class="card">
+                <h3>Total de registros</h3>
+                <p id="totalRegistros">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Ventas totales</h3>
+                <p id="ventasTotales">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Media</h3>
+                <p id="media">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Mediana</h3>
+                <p id="mediana">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Desviación estándar</h3>
+                <p id="desviacion">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Varianza</h3>
+                <p id="varianza">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Ventas mínimas</h3>
+                <p id="minimo">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Ventas máximas</h3>
+                <p id="maximo">0</p>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>4. Tabla de datos</h2>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Ventas</th>
+                        <th>Crecimiento (%)</th>
+                        <th>Participación relativa</th>
+                    </tr>
+                </thead>
+
+                <tbody id="tablaDatos"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>5. Gráfico de ventas</h2>
+
+        <div class="chart-box">
+            <canvas id="ventasChart"></canvas>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>6. Matriz BCG</h2>
+
+        <p>
+            La clasificación se realiza usando los umbrales definidos
+            en la sección de parámetros.
+        </p>
+
+        <div class="bcg-grid">
+
+            <div class="bcg-quadrant stars">
+                <h3>⭐ Estrellas</h3>
+                <p>Alto crecimiento / Alta participación</p>
+                <div id="estrellas"></div>
+            </div>
+
+            <div class="bcg-quadrant question">
+                <h3>❓ Interrogantes</h3>
+                <p>Alto crecimiento / Baja participación</p>
+                <div id="interrogantes"></div>
+            </div>
+
+            <div class="bcg-quadrant cows">
+                <h3>🐄 Vacas lecheras</h3>
+                <p>Bajo crecimiento / Alta participación</p>
+                <div id="vacas"></div>
+            </div>
+
+            <div class="bcg-quadrant dogs">
+                <h3>🐕 Perros</h3>
+                <p>Bajo crecimiento / Baja participación</p>
+                <div id="perros"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>7. Exportar resultados</h2>
+
+        <button onclick="exportarResultados()">
+            Descargar CSV
+        </button>
+    </div>
+
+</div>
+
+<script>
+
+let datos = [];
+
+let ventasChart = null;
+
+const datosEjemplo = [
+    { producto: "Producto A", ventas: 15000, crecimiento: 20, participacion: 1.8 },
+    { producto: "Producto B", ventas: 25000, crecimiento: 5, participacion: 2.2 },
+    { producto: "Producto C", ventas: 8000, crecimiento: 18, participacion: 0.6 },
+    { producto: "Producto D", ventas: 5000, crecimiento: 2, participacion: 0.4 },
+    { producto: "Producto E", ventas: 18000, crecimiento: 12, participacion: 1.3 },
+    { producto: "Producto F", ventas: 9000, crecimiento: 7, participacion: 0.8 }
+];
+
+document.getElementById("csvFile").addEventListener("change", function(event) {
+
+    const archivo = event.target.files[0];
+
+    if (!archivo) return;
+
+    const lector = new FileReader();
+
+    lector.onload = function(e) {
+
+        const texto = e.target.result;
+
+        const filas = texto.trim().split(/\r?\n/);
+
+        if (filas.length < 2) {
+            alert("El archivo no tiene suficientes datos.");
+            return;
+        }
+
+        const encabezados = parseCSVLine(filas[0])
+            .map(x => x.trim().toLowerCase());
+
+        const indiceProducto = encontrarColumna(encabezados, [
+            "producto", "product", "item", "nombre"
+        ]);
+
+        const indiceVentas = encontrarColumna(encabezados, [
+            "ventas", "sales", "revenue", "ingresos"
+        ]);
+
+        const indiceCrecimiento = encontrarColumna(encabezados, [
+            "crecimiento", "growth", "growthrate"
+        ]);
+
+        const indiceParticipacion = encontrarColumna(encabezados, [
+            "participacion", "participación",
+            "marketshare", "relative_market_share"
+        ]);
+
+        if (indiceProducto === -1 || indiceVentas === -1 ||
+            indiceCrecimiento === -1 || indiceParticipacion === -1) {
+
+            alert(
+                "Faltan columnas. Se necesitan Producto, Ventas, Crecimiento y Participacion."
+            );
+
+            return;
+        }
+
+        datos = [];
+
+        for (let i = 1; i < filas.length; i++) {
+
+            if (!filas[i].trim()) continue;
+
+            const columnas = parseCSVLine(filas[i]);
+
+            const ventas = parseNumero(columnas[indiceVentas]);
+            const crecimiento = parseNumero(columnas[indiceCrecimiento]);
+            const participacion = parseNumero(columnas[indiceParticipacion]);
+
+            if (
+                columnas[indiceProducto] !== undefined &&
+                Number.isFinite(ventas) &&
+                Number.isFinite(crecimiento) &&
+                Number.isFinite(participacion)
+            ) {
+
+                datos.push({
+                    producto: columnas[indiceProducto].trim(),
+                    ventas: ventas,
+                    crecimiento: crecimiento,
+                    participacion: participacion
+                });
+
+            }
+
+        }
+
+        if (datos.length === 0) {
+
+            alert("No se encontraron registros válidos.");
+
+            return;
+
+        }
+
+        actualizarAnalisis();
+
+    };
+
+    lector.readAsText(archivo);
+
+});
+
+function parseCSVLine(linea) {
+
+    const resultado = [];
+
+    let actual = "";
+
+    let dentroComillas = false;
+
+    for (let i = 0; i < linea.length; i++) {
+
+        const caracter = linea[i];
+
+        if (caracter === '"') {
+
+            if (dentroComillas && linea[i + 1] === '"') {
+
+                actual += '"';
+
+                i++;
+
+            } else {
+
+                dentroComillas = !dentroComillas;
+
+            }
+
+        } else if (caracter === "," && !dentroComillas) {
+
+            resultado.push(actual);
+
+            actual = "";
+
+        } else {
+
+            actual += caracter;
+
+        }
+
+    }
+
+    resultado.push(actual);
+
+    return resultado;
+
+}
+
+function encontrarColumna(encabezados, nombres) {
+
+    return encabezados.findIndex(encabezado =>
+        nombres.includes(encabezado.replace(/\s+/g, ""))
+    );
+
+}
+
+function parseNumero(valor) {
+
+    if (valor === undefined || valor === null) return NaN;
+
+    let texto = String(valor).trim().replace(/%/g, "");
+
+    texto = texto.replace(/\s/g, "");
+
+    if (texto.includes(",") && texto.includes(".")) {
+
+        if (texto.lastIndexOf(",") > texto.lastIndexOf(".")) {
+
+            texto = texto.replace(/\./g, "").replace(",", ".");
+
+        } else {
+
+            texto = texto.replace(/,/g, "");
+
+        }
+
+    } else if (texto.includes(",")) {
+
+        texto = texto.replace(",", ".");
+
+    }
+
+    return Number(texto);
+
+}
+
+function cargarEjemplo() {
+
+    datos = datosEjemplo.map(d => ({...d}));
+
+    actualizarAnalisis();
+
+}
+
+function limpiarDatos() {
+
+    datos = [];
+
+    document.getElementById("tablaDatos").innerHTML = "";
+
+    document.getElementById("totalRegistros").textContent = "0";
+
+    document.getElementById("ventasTotales").textContent = "0";
+
+    document.getElementById("media").textContent = "0";
+
+    document.getElementById("mediana").textContent = "0";
+
+    document.getElementById("desviacion").textContent = "0";
+
+    document.getElementById("varianza").textContent = "0";
+
+    document.getElementById("minimo").textContent = "0";
+
+    document.getElementById("maximo").textContent = "0";
+
+    ["estrellas", "interrogantes", "vacas", "perros"].forEach(id => {
+
+        document.getElementById(id).innerHTML = "";
+
+    });
+
+    if (ventasChart) {
+
+        ventasChart.destroy();
+
+        ventasChart = null;
+
+    }
+
+}
+
+function actualizarAnalisis() {
+
+    if (datos.length === 0) {
+
+        alert("Primero carga un archivo o usa los datos de ejemplo.");
+
+        return;
+
+    }
+
+    const ventas = datos.map(d => d.ventas);
+
+    const n = ventas.length;
+
+    const total = ventas.reduce((a, b) => a + b, 0);
+
+    const promedio = total / n;
+
+    const ordenados = [...ventas].sort((a, b) => a - b);
+
+    let mediana;
+
+    if (n % 2 === 0) {
+
+        mediana = (ordenados[n / 2 - 1] + ordenados[n / 2]) / 2;
+
+    } else {
+
+        mediana = ordenados[Math.floor(n / 2)];
+
+    }
+
+    const varianza = ventas.reduce(
+        (suma, valor) => suma + Math.pow(valor - promedio, 2), 0
+    ) / (n - 1 || 1);
+
+    const desviacion = Math.sqrt(varianza);
+
+    document.getElementById("totalRegistros").textContent = n;
+
+    document.getElementById("ventasTotales").textContent = formato(total);
+
+    document.getElementById("media").textContent = formato(promedio);
+
+    document.getElementById("mediana").textContent = formato(mediana);
+
+    document.getElementById("desviacion").textContent = formato(desviacion);
+
+    document.getElementById("varianza").textContent = formato(varianza);
+
+    document.getElementById("minimo").textContent = formato(Math.min(...ventas));
+
+    document.getElementById("maximo").textContent = formato(Math.max(...ventas));
+
+    mostrarTabla();
+
+    mostrarGrafico();
+
+    generarBCG();
+
+}
+
+function formato(numero) {
+
+    return Number(numero).toLocaleString("es-EC", {
+        maximumFractionDigits: 2
+    });
+
+}
+
+function mostrarTabla() {
+
+    const tabla = document.getElementById("tablaDatos");
+
+    tabla.innerHTML = "";
+
+    datos.forEach(d => {
+
+        const fila = document.createElement("tr");
+
+        [d.producto, formato(d.ventas), d.crecimiento + "%", d.participacion]
+            .forEach(valor => {
+
+                const celda = document.createElement("td");
+
+                celda.textContent = valor;
+
+                fila.appendChild(celda);
+
+            });
+
+        tabla.appendChild(fila);
+
+    });
+
+}
+
+function mostrarGrafico() {
+
+    const etiquetas = datos.map(d => d.producto);
+
+    const valores = datos.map(d => d.ventas);
+
+    if (ventasChart) {
+
+        ventasChart.destroy();
+
+    }
+
+    ventasChart = new Chart(
+        document.getElementById("ventasChart"),
+        {
+            type: "bar",
+
+            data: {
+
+                labels: etiquetas,
+
+                datasets: [{
+
+                    label: "Ventas",
+
+                    data: valores,
+
+                    borderWidth: 1
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+
+                        display: true
+
+                    }
+
+                },
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
+
+}
+
+function generarBCG() {
+
+    const umbralCrecimiento = Number(
+        document.getElementById("umbralCrecimiento").value
+    );
+
+    const umbralParticipacion = Number(
+        document.getElementById("umbralParticipacion").value
+    );
+
+    const cuadrantes = {
+
+        estrellas: [],
+
+        interrogantes: [],
+
+        vacas: [],
+
+        perros: []
+
+    };
+
+    datos.forEach(d => {
+
+        let grupo;
+
+        const crecimientoAlto = d.crecimiento >= umbralCrecimiento;
+
+        const participacionAlta = d.participacion >= umbralParticipacion;
+
+        if (crecimientoAlto && participacionAlta) {
+
+            grupo = "estrellas";
+
+        } else if (crecimientoAlto && !participacionAlta) {
+
+            grupo = "interrogantes";
+
+        } else if (!crecimientoAlto && participacionAlta) {
+
+            grupo = "vacas";
+
+        } else {
+
+            grupo = "perros";
+
+        }
+
+        cuadrantes[grupo].push(d);
+
+    });
+
+    Object.keys(cuadrantes).forEach(grupo => {
+
+        const contenedor = document.getElementById(grupo);
+
+        contenedor.innerHTML = "";
+
+        if (cuadrantes[grupo].length === 0) {
+
+            contenedor.textContent = "Sin productos";
+
+            return;
+
+        }
+
+        cuadrantes[grupo].forEach(d => {
+
+            const etiqueta = document.createElement("span");
+
+            etiqueta.className = "product-tag";
+
+            etiqueta.textContent = d.producto;
+
+            contenedor.appendChild(etiqueta);
+
+        });
+
+    });
+
+}
+
+function exportarResultados() {
+
+    if (datos.length === 0) {
+
+        alert("No hay datos para exportar.");
+
+        return;
+
+    }
+
+    const filas = [
+
+        ["Producto", "Ventas", "Crecimiento", "Participacion"]
+
+    ];
+
+    datos.forEach(d => {
+
+        filas.push([
+            d.producto,
+            d.ventas,
+            d.crecimiento,
+            d.participacion
+        ]);
+
+    });
+
+    const csv = filas.map(fila =>
+        fila.map(valor => `"${String(valor).replace(/"/g, '""')}"`).join(",")
+    ).join("\n");
+
+    const blob = new Blob(["\uFEFF" + csv], {
+        type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const enlace = document.createElement("a");
+
+    enlace.href = url;
+
+    enlace.download = "resultados_retail.csv";
+
+    enlace.click();
+
+    URL.revokeObjectURL(url);
+
+}
+
+cargarEjemplo();
+
+</script>
+
+</body>
+</html>
